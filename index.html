@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Temperature Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<canvas id="temperatureChart" width="800" height="400"></canvas>
+
+<script>
+    function alignDataWithLabels(data, labels, dataLabels) {
+        return labels.map(label => {
+            const dataIndex = dataLabels.indexOf(label);
+            return dataIndex !== -1 ? data[dataIndex].value : null; // Replace 'null' with a default value if needed
+        });
+    }
+
+
+    fetch('https://api.weather.gov/gridpoints/JAX/43,34')
+        .then(response => response.json())
+        .then(jsonData => {
+
+            // grab the data from JSON
+            const temperatureData = jsonData.properties.temperature.values;
+            const probabilityData = jsonData.properties.probabilityOfPrecipitation.values;
+
+            // Assuming temperatureData and probabilityData are your parsed data arrays
+            const temperatureLabels = temperatureData.map(item => item.validTime.split("/")[0]);
+            const probabilityLabels = probabilityData.map(item => item.validTime.split("/")[0]);
+
+            // Combine and deduplicate labels
+            const allLabels = Array.from(new Set([...temperatureLabels, ...probabilityLabels]))
+                                .sort(); // Sort if necessary
+
+            const alignedTemperatureValues = alignDataWithLabels(temperatureData, allLabels, temperatureLabels);
+            const alignedProbabilityValues = alignDataWithLabels(probabilityData, allLabels, probabilityLabels);
+
+            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            const mixedChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allLabels,
+                    datasets: [
+                    {
+                        label: 'Temperature (°C)',
+                        data: alignedTemperatureValues,
+                        yAxis: 'yTemperature',
+                        pointRadius: 0, // Don't show points
+                        spanGaps: true, // join data points with line
+                        lineTension: 0.5, // make it max curvy
+                        // ... Temperature dataset styles...
+                    },
+                    {
+                        label: 'Probability of Precipitation (%)',
+                        data: alignedProbabilityValues,
+                        yAxis: 'yProbability',
+                        pointRadius: 0,
+                        spanGaps: true,
+                        lineTension: 0.5,
+                        // ... Probability dataset styles...
+                    }
+                    ]
+                },
+                options: {
+                    scales: {
+                        yTemperature: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            id: 'yTemperature',
+                            min: -20,
+                            max: 200,
+                            grid: {
+                                display: false,
+                            }
+                            // Configure temperature axis options...
+                        },
+                        yProbability: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            id: 'yProbability',
+                            min: -40,
+                            max: 30,
+                            grid: {
+                                display: false,
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false,
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                            }
+                        }
+                    }
+                    // ... other options ...
+                }
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+</script>
+
+</body>
+</html>
