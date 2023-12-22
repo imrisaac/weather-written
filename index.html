@@ -25,6 +25,16 @@
             const temperatureData = jsonData.properties.temperature.values;
             const probabilityData = jsonData.properties.probabilityOfPrecipitation.values;
 
+            if (probabilityData.length < temperatureData.length) {
+                const lastTempTime = temperatureData[temperatureData.length - 1].validTime;
+                const lastKnownProbValue = probabilityData[probabilityData.length - 1].value;
+
+                probabilityData.push({
+                    validTime: lastTempTime, // Match the last validTime of temperature dataset
+                    value: lastKnownProbValue // Use the last known probability value or a default value
+                });
+            }
+
             // Assuming temperatureData and probabilityData are your parsed data arrays
             const temperatureLabels = temperatureData.map(item => item.validTime.split("/")[0]);
             const probabilityLabels = probabilityData.map(item => item.validTime.split("/")[0]);
@@ -45,19 +55,20 @@
                     {
                         label: 'Temperature (°C)',
                         data: alignedTemperatureValues,
-                        yAxis: 'yTemperature',
-                        pointRadius: 0, // Don't show points
+                        yAxisID: 'yTemperature',
+                        pointRadius: 1, // Don't show points
                         spanGaps: true, // join data points with line
-                        lineTension: 0.5, // make it max curvy
-                        // ... Temperature dataset styles...
+                        lineTension: 0.4, // make it max curvy
+                        zIndex: 1,
                     },
                     {
                         label: 'Probability of Precipitation (%)',
                         data: alignedProbabilityValues,
-                        yAxis: 'yProbability',
-                        pointRadius: 0,
+                        yAxisID: 'yProbability',
+                       pointRadius: 0,
                         spanGaps: true,
-                        lineTension: 0.5,
+                        lineTension: 0.4,
+                        zIndex: 1, 
                         // ... Probability dataset styles...
                     }
                     ]
@@ -69,30 +80,32 @@
                             display: true,
                             position: 'left',
                             id: 'yTemperature',
-                            min: -20,
-                            max: 200,
+                            min: 0,
+                            max: 40,
                             grid: {
                                 display: false,
                             }
-                            // Configure temperature axis options...
                         },
                         yProbability: {
                             type: 'linear',
                             display: true,
-                            position: 'right',
+                            position: 'left',
                             id: 'yProbability',
-                            min: -40,
-                            max: 30,
+                            min: -10,
+                            max: 300,
                             grid: {
                                 display: false,
                             }
                         },
                         y: {
+                            position: 'left',
+                            display: false,
                             grid: {
                                 display: false,
                             }
                         },
                         x: {
+                            position: 'bottom',
                             grid: {
                                 display: false,
                             }
